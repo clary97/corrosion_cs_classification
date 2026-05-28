@@ -1,4 +1,9 @@
 # corrosion_cs_classification
+
+> **Original repository:** [beric7/corrosion_cs_classification](https://github.com/beric7/corrosion_cs_classification)
+> This repository is a personal working copy based on the original work by Eric Bianchi et al.
+> All credit for the original code, dataset, and trained models goes to the original authors — see the [Citation](#citation) section below.
+
 corrosion condition state classification for bridge inspections
 
 <p align="center">
