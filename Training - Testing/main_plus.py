@@ -1,8 +1,8 @@
 import torch.optim as optim
 from sklearn.metrics import roc_auc_score, f1_score, jaccard_score
-from metrics.loss import get_spectrum_score
+from utils.loss import get_spectrum_score
 from model_plus import createDeepLabv3Plus
-from metrics.loss import spectrum_loss
+from utils.loss import spectrum_loss
 
 import sys
 print(sys.version, sys.platform, sys.executable)

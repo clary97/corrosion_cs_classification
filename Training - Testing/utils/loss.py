@@ -1,6 +1,7 @@
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import torch 
+import torch
 from scipy.sparse import diags
 from sklearn.metrics import confusion_matrix
 
@@ -53,6 +54,6 @@ class spectrum_loss(nn.Module):
         
         return spectrum_loss
         
-def get_scectrum_score(inputs, targets):
+def get_spectrum_score(inputs, targets):
     confm = confusion_matrix(inputs, targets)
-    return spectrum_score(confm_sum)
+    return spectrum_score(confm)

@@ -64,15 +64,71 @@ Once training has converged or when it has stopped, we can used the best checkpo
 - gets combined mask and image overaly
 - gets one-hot-encoded vector images of predictions
 
-## Training with the Structural Material dataset
+## Dataset preparation
 
-1. Clone the repository
-2. Download the :green_circle:[dataset](https://doi.org/10.7294/16624663.v2)
-3. Go into the Training folder
-4. Create a DATA folder
-5. Copy and paste the Train and Test folders for 512x512 images from the dataset you downloaded into the DATA folder
-6. The DATA folder should have a folder called 'Train' and a folder called 'Test'. Inside each of those folders include the mask and image pairs in their respective folders (Masks, Images). 
-7. If you have set this up correctly then you are now ready to begin.
+The training script expects a single directory laid out as follows, where every image has a same-stem mask in the parallel folder:
+
+```
+<DATA_DIR>/
+  Train/
+    Images/  *.jpg | *.jpeg | *.png
+    Masks/   *.png   (same stems as Images)
+  Test/
+    Images/
+    Masks/
+```
+
+Class color mapping for masks (read by OpenCV in BGR order; equivalent to RGB black / red / green / yellow):
+
+| Index | Class            | BGR value     |
+|-------|------------------|---------------|
+| 0     | Good (background)| (0, 0, 0)     |
+| 1     | Fair             | (0, 0, 128)   |
+| 2     | Poor             | (0, 128, 0)   |
+| 3     | Severe           | (0, 128, 128) |
+
+Masks must be 512×512 and contain only the four colors above (use `Pre-processing/rescale_image.py` and `rescale_segmentation.py` if you need to downscale). If you train on a different class set, edit the `self.mapping` dict and `channels` argument accordingly.
+
+### Rasterizing labelme-polygon datasets (when the source has no pixel masks)
+
+Some datasets ship labelme JSON polygons instead of pre-rendered pixel masks. `Pre-processing/rasterize_labelme_dataset.py` converts a labelme dataset into the `Train/Test × Images/Masks` pixel-mask layout used here, baking the four-class BGR colors above into the output and downscaling to 512×512.
+
+1. Open `Pre-processing/rasterize_labelme_dataset.py` and edit:
+   - `SOURCE_ROOT` — absolute path to the labelme dataset's top level.
+   - `SPLIT_SPECS` — list of `(images_subdir, json_subdir, output_split)` tuples. Multiple entries may target the same output split (e.g. merge `validation` into `Train`).
+   - `LABEL_TO_BGR` — map each labelme `label` string to a BGR pixel color. Labels not listed here are treated as background.
+
+2. Run:
+
+   ```bash
+   python Pre-processing/rasterize_labelme_dataset.py \
+     --output <RASTERIZED_DIR> \
+     --image-size 512
+   ```
+
+   The output directory then has the same shape as any pre-rendered dataset and can be fed straight into the unifier below.
+
+### Unifying one or more source datasets
+
+Source datasets rarely come in the exact layout above (folder names differ, file stems collide between datasets, etc.). `Pre-processing/prepare_dataset.py` builds the expected layout from one or more sources without modifying the originals — it creates symlinks (or copies) under a destination directory, prefixing filenames so multiple datasets can be merged safely.
+
+1. Open `Pre-processing/prepare_dataset.py` and edit the `DATASETS` list. Each entry points at one source dataset's train/test image and mask folders and assigns a short `prefix`. Add another entry per dataset you want to merge.
+
+2. Run the script, passing the unified output directory you want to create:
+
+   ```bash
+   python Pre-processing/prepare_dataset.py \
+     --output <DATA_DIR> \
+     --mode symlink     # or `copy` if you need a portable, standalone tree
+   ```
+
+3. Pass the same `<DATA_DIR>` to `main_plus.py` via `-data_directory` (see commands below).
+
+## Training with the unified dataset
+
+1. Prepare `<DATA_DIR>` using the steps above.
+2. Go into the `Training - Testing/` folder.
+3. If you set up `<DATA_DIR>` correctly you are now ready to begin.
 
 Neccesary and optional inputs to the ***main_plus.py*** file:
 ('-' means it is neccessary, '--' means that these are optional inputs)
@@ -90,30 +146,48 @@ Neccesary and optional inputs to the ***main_plus.py*** file:
 
 Run the following command:
 ```
-python main_plus.py -data_directory '/PATH TO DATA DIRECTORY/' -exp_directory '/PATH TO SAVE CHECKPOINTS/' \
+python main_plus.py -data_directory '<DATA_DIR>' -exp_directory '<EXP_DIR>' \
 --epochs 40 --batch 2
 ```
 
-During training there are model checkpoints saved every epoch. At these checkpoints the model is compared against the test or validation data. If the test or validation scores are better than the best score, then it is saved. 
+During training there are model checkpoints saved every epoch. At these checkpoints the model is compared against the test or validation data. If the test or validation scores are better than the best score, then it is saved.
+
+### Fine-tuning from the published Weighted Cross-Entropy checkpoint
+
+The four pre-trained `.pt` files distributed at the :green_circle:[trained models](https://doi.org/10.7294/16628668.v1) DOI differ only in their loss function (cross-entropy, weighted cross-entropy, L1, L2); all share the DeepLabV3+/ResNet50 architecture, 512×512 input, batch size 2, and horizontal-flip augmentation. The Weighted CE checkpoint (`var_original_wbatch_2_plus_weights_40.pt`, trained with class weights `[0.1, 0.3, 0.3, 0.3]`) is generally the strongest starting point for further fine-tuning.
+
+1. Download the archive and place the checkpoint under any path on disk, e.g.:
+
+   ```
+   Training - Testing/stored_weights/var_original_wwwbatch_2_plus/var_original_wbatch_2_plus_weights_40.pt
+   ```
+
+2. From inside `Training - Testing/`, run:
+
+   ```bash
+   python main_plus.py \
+     -data_directory '<DATA_DIR>' \
+     -exp_directory  '<EXP_DIR>' \
+     --epochs 40 --batch 2 \
+     --loss cross_entropy \
+     --class_weights 0.1 0.3 0.3 0.3 \
+     --pretrained 'stored_weights/var_original_wwwbatch_2_plus/var_original_wbatch_2_plus_weights_40.pt'
+   ```
+
+   Adjust `--class_weights` to match your dataset's class distribution; the values above are what the original authors used. The `.pt` files themselves are not tracked in this repository — keep them outside git or under a path covered by `.gitignore`. 
 
 ## Training with a custom dataset
-1. Clone the repository
-2. Ensure your image and mask data is 512x512 pixels. *(can use the ***rescale_image.py*** in Pre-processing)*
-3. Ensure that if you resized your masks to 512x512 that they did not interpolate the colors into more color classes than you have. The expected format is BGR. *(can use the ***rescale_segmentation.py*** in Pre-processing)*
-4. You now need to go into the ***datahandler_plus.py*** file and edit the colors as necessary. For example, the Structural Materials dataset used the following format, which is in the ***datahandler_plus.py*** in this repository.
-```
-# color mapping corresponding to classes
-# ---------------------------------------------------------------------
-# 0 = Good (Black)
-# 1 = Fair (Red)
-# 2 = Poor (Green)
-# 3 = Severe (Yellow)
-# ---------------------------------------------------------------------
-self.mapping = {(0,0,0): 0, (0,0,128): 1, (0,128,0): 2, (0,128,128): 3}
-```
-6. Adjust the number of 'channels' in the training command to match the number of channels that you have.
-7. Ensure that your DATA folder has a folder called 'Train' and a folder called 'Test'. Inside each of those folders include the mask and image pairs in their respective folders (Masks, Images). 
-8. If you have set this up correctly then you are now ready to begin.
+
+To train on a dataset other than the corrosion condition states (or to extend it):
+
+1. Ensure your image and mask data is 512×512. Use `Pre-processing/rescale_image.py` and `rescale_segmentation.py` if you need to downscale. Mask resizing **must** use nearest-neighbor interpolation so new colors aren't introduced.
+2. Edit the color map in `Training - Testing/datahandler_plus.py` (`self.mapping`) so each BGR tuple in your masks maps to the desired class index. Example default for the corrosion dataset:
+   ```python
+   # 0 = Good (Black), 1 = Fair (Red), 2 = Poor (Green), 3 = Severe (Yellow)
+   self.mapping = {(0,0,0): 0, (0,0,128): 1, (0,128,0): 2, (0,128,128): 3}
+   ```
+3. Pass `--channels N` to `main_plus.py` if your class count differs from 4.
+4. Use `Pre-processing/prepare_dataset.py` (see [Dataset preparation](#dataset-preparation)) to build the `Train/{Images,Masks}` + `Test/{Images,Masks}` layout that the training script expects.
 
 ## Building a Custom Dataset
 (The images in the dataset were annotated using [labelme](https://github.com/wkentaro/labelme). We suggest that you use this tool)
