@@ -36,16 +36,54 @@ We were able to achieve an f1-score of 86.67% using the weighted cross entropy c
     
 
 ## Requirements
-The most important environment configurations are the following:
-- Pytorch >= 1.4
-- Python >= 3.6
-- tqdm
-- matplotlib
-- sklearn
-- cv2
-- Pillow
-- pandas
-- shutil
+
+**Python 3.9 or 3.10** is recommended for best compatibility with all dependencies (particularly `imgaug`).
+
+### 1. Create and activate a virtual environment
+
+```bash
+python3.10 -m venv .venv
+source .venv/bin/activate      # Linux / macOS
+.venv\Scripts\activate         # Windows
+```
+
+### 2. Install PyTorch with GPU (CUDA) support
+
+Choose the command that matches your CUDA version (check with `nvidia-smi`):
+
+```bash
+# CUDA 11.8
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+# CUDA 12.1
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# CUDA 12.4
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+```
+
+Verify the GPU is visible:
+
+```bash
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+### 3. Install remaining dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Key packages installed by `requirements.txt`:
+
+| Package | Purpose |
+|---|---|
+| `numpy`, `scipy`, `scikit-learn` | Numerical / metrics |
+| `opencv-python`, `Pillow`, `imageio` | Image I/O |
+| `imgaug`, `imgviz` | Data augmentation / visualization |
+| `tqdm`, `matplotlib`, `pandas` | Training utilities |
+| `visdom` | Live training dashboard |
+| `labelme` | Annotation & pre-processing |
 
 ## Evaluating the Trained DeeplabV3+ Model
 - Clone the respository.
@@ -127,7 +165,7 @@ Source datasets rarely come in the exact layout above (folder names differ, file
 ## Training with the unified dataset
 
 1. Prepare `<DATA_DIR>` using the steps above.
-2. Go into the `Training - Testing/` folder.
+2. Go into the `Training_Testing/` folder.
 3. If you set up `<DATA_DIR>` correctly you are now ready to begin.
 
 Neccesary and optional inputs to the ***main_plus.py*** file:
@@ -159,10 +197,10 @@ The four pre-trained `.pt` files distributed at the :green_circle:[trained model
 1. Download the archive and place the checkpoint under any path on disk, e.g.:
 
    ```
-   Training - Testing/stored_weights/var_original_wwwbatch_2_plus/var_original_wbatch_2_plus_weights_40.pt
+   Training_Testing/stored_weights/var_original_wwwbatch_2_plus/var_original_wbatch_2_plus_weights_40.pt
    ```
 
-2. From inside `Training - Testing/`, run:
+2. From inside `Training_Testing/`, run:
 
    ```bash
    python main_plus.py \
@@ -181,7 +219,7 @@ The four pre-trained `.pt` files distributed at the :green_circle:[trained model
 To train on a dataset other than the corrosion condition states (or to extend it):
 
 1. Ensure your image and mask data is 512×512. Use `Pre-processing/rescale_image.py` and `rescale_segmentation.py` if you need to downscale. Mask resizing **must** use nearest-neighbor interpolation so new colors aren't introduced.
-2. Edit the color map in `Training - Testing/datahandler_plus.py` (`self.mapping`) so each BGR tuple in your masks maps to the desired class index. Example default for the corrosion dataset:
+2. Edit the color map in `Training_Testing/datahandler_plus.py` (`self.mapping`) so each BGR tuple in your masks maps to the desired class index. Example default for the corrosion dataset:
    ```python
    # 0 = Good (Black), 1 = Fair (Red), 2 = Poor (Green), 3 = Severe (Yellow)
    self.mapping = {(0,0,0): 0, (0,0,128): 1, (0,128,0): 2, (0,128,128): 3}
