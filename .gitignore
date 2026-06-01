@@ -1,0 +1,18 @@
+# model checkpoints (downloaded separately from figshare DOI 10.7294/16628668)
+stored_weights/
+**/*.pt
+**/*.pth
+
+# data
+**/DATA/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
