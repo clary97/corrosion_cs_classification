@@ -51,19 +51,26 @@ def process_split(split: str, input_root: Path, output_root: Path) -> None:
     dst_msk_dir.mkdir(parents=True, exist_ok=True)
 
     images = sorted(src_img_dir.iterdir())
-    print(f"[{split}] {len(images)}개 처리 중...")
+    # stem → 마스크 경로 사전 (이미지와 마스크 확장자가 다를 수 있음)
+    mask_by_stem = {p.stem: p for p in src_msk_dir.iterdir() if p.is_file()}
 
+    print(f"[{split}] 이미지 {len(images)}개 / 마스크 {len(mask_by_stem)}개")
+
+    paired, orphan = 0, 0
     for img_path in tqdm(images, desc=split):
-        # 이미지는 심볼릭 링크 or 복사
         dst_img = dst_img_dir / img_path.name
         if not dst_img.exists():
             shutil.copy2(img_path, dst_img)
 
-        # 마스크는 재매핑
-        msk_path = src_msk_dir / img_path.name
-        if msk_path.exists():
-            remap_mask(msk_path, dst_msk_dir / img_path.name)
+        msk_path = mask_by_stem.get(img_path.stem)
+        if msk_path:
+            # 마스크는 항상 .png 로 저장
+            remap_mask(msk_path, dst_msk_dir / f"{img_path.stem}.png")
+            paired += 1
+        else:
+            orphan += 1
 
+    print(f"  매핑 성공: {paired}, 마스크 없음: {orphan}")
     print(f"  → {dst_msk_dir}")
 
 
