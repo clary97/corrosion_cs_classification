@@ -48,7 +48,7 @@ DATASETS: list[dict] = [
     },
     {
         "name": "CIR",  # Corrosion Images Rasterized (labelme JSONs -> pixel masks
-                        # via Pre-processing/rasterize_labelme_dataset.py)
+                        # via preprocessing/rasterize_labelme_dataset.py)
         "root": "/mnt/nas_200/corrosion_images_512",
         "train_images": "Train/Images",
         "train_masks":  "Train/Masks",

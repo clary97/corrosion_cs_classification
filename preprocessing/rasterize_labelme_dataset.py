@@ -19,7 +19,7 @@ Class color mapping for masks (BGR, matches Training - Testing/datahandler_plus.
 Configure the ``SOURCE_ROOT`` / ``SPLIT_SPECS`` / ``LABEL_TO_BGR`` block below
 to match your source dataset, then run:
 
-    python Pre-processing/rasterize_labelme_dataset.py \\
+    python preprocessing/rasterize_labelme_dataset.py \\
         --output /path/to/rasterized_dataset \\
         --image-size 512
 """
