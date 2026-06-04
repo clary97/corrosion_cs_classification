@@ -214,6 +214,50 @@ The four pre-trained `.pt` files distributed at the :green_circle:[trained model
 
    Adjust `--class_weights` to match your dataset's class distribution; the values above are what the original authors used. The `.pt` files themselves are not tracked in this repository — keep them outside git or under a path covered by `.gitignore`. 
 
+## Binary classification experiment (Good vs Corrosion)
+
+As an alternative to 4-class segmentation, Fair/Poor/Severe can be merged into a single **Corrosion** class for a simpler binary task. This often yields higher IoU on the corrosion region since the model no longer needs to distinguish severity boundaries.
+
+| Class | Index | Mask color (BGR) |
+|---|---|---|
+| Good | 0 | (0, 0, 0) |
+| Corrosion | 1 | (0, 0, 128) |
+
+### 1. Prepare the binary dataset
+
+```bash
+python preprocessing/prepare_binary_dataset.py \
+  --input  /path/to/unified_corrosion \
+  --output /path/to/unified_corrosion_binary
+```
+
+This remaps Fair/Poor/Severe → BGR (0, 0, 128) while keeping Good as-is, and writes the result to a new `Train/Test` directory tree.
+
+### 2. Train
+
+From inside `training/`:
+
+```bash
+python main_plus.py \
+  -data_directory '/path/to/unified_corrosion_binary' \
+  -exp_directory  './stored_weights/finetune_binary_v1' \
+  --epochs 40 --batchsize 2 --output_stride 8 --channels 2 \
+  --loss cross_entropy \
+  --class_weights 0.15 0.85
+```
+
+### 3. Evaluate and save predictions
+
+```bash
+# Per-class metrics + learning curves (compared against 4-class run)
+python evaluate_binary.py
+
+# Save 4-panel inference images for the test set
+python save_predictions_binary.py
+```
+
+---
+
 ## Training with a custom dataset
 
 To train on a dataset other than the corrosion condition states (or to extend it):
