@@ -70,7 +70,8 @@ def train_model(model, criterion, dataloaders, optimizer, metrics, bpath, l='cro
                                                                torch_y_pred_ravel.shape[1]*torch_y_pred_ravel.shape[2])
 
                     # predefined tensor that sets up for a weighted average
-                    torch_set = torch.tensor([[0],[1],[2],[3]]).to(dtype=torch.float32).to(device)
+                    num_classes = torch_y_pred_ravel.shape[0]
+                    torch_set = torch.arange(num_classes).reshape(-1, 1).to(dtype=torch.float32).to(device)
                     trans_set = torch.transpose(torch_set, 0, 1)
                     torch_spec = torch.matmul(trans_set, torch_y_pred_ravel)
 
