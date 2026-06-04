@@ -55,7 +55,7 @@ def main():
     model_path = args.pretrained
     print('loading pre-trained model from saved state: ' + model_path)
     epoch_number = args.epoch_number
-    print('starting from epoch number: ' + epoch_number)
+    print('starting from epoch number: ' + str(epoch_number))
     
     if not os.path.exists(bpath): # if it doesn't exist already
         os.makedirs(bpath)  
@@ -64,7 +64,7 @@ def main():
     # on the 20 categories that are present in the Pascal VOC dataset.
     if model_path != '':
         try:
-            model = torch.load(model_path)
+            model = torch.load(model_path, weights_only=False)
             print('LOADED MODEL')
             model.train()
         except:

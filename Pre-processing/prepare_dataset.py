@@ -39,7 +39,7 @@ from pathlib import Path
 DATASETS: list[dict] = [
     {
         "name": "CCSC",  # Bianchi et al., 2021 — Corrosion Condition State Classification
-        "root": "/workspace/nas_200/minkyung/Corrosion_Condition_State_Classification/512x512",
+        "root": "/mnt/nas_200/Corrosion_Condition_State_Classification/512x512",
         "train_images": "Train/images_512",
         "train_masks":  "Train/mask_512",
         "test_images":  "Test/images_512",
@@ -49,7 +49,7 @@ DATASETS: list[dict] = [
     {
         "name": "CIR",  # Corrosion Images Rasterized (labelme JSONs -> pixel masks
                         # via Pre-processing/rasterize_labelme_dataset.py)
-        "root": "/workspace/nas_200/minkyung/corrosion_images_512",
+        "root": "/mnt/nas_200/corrosion_images_512",
         "train_images": "Train/Images",
         "train_masks":  "Train/Masks",
         "test_images":  "Test/Images",

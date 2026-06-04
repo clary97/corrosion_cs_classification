@@ -34,7 +34,10 @@ def train_model(model, criterion, dataloaders, optimizer, metrics, bpath, l='cro
                 model.train()  # Set model to training mode
             else:
                 model.eval()   # Set model to evaluate mode
-            
+
+            running_loss = 0.0
+            num_batches  = 0
+
             # Iterate over data.
             for batch in tqdm(iter(dataloaders[phase])):
                 # These lines appear to be correct.
@@ -58,14 +61,14 @@ def train_model(model, criterion, dataloaders, optimizer, metrics, bpath, l='cro
 
                     # y_pred_tensor = mask_pred['out']
                     pred = torch.argmax(y_pred_tensor, dim=1)
-                    
+
                     # ravel the prediction tensor, works only for batch of 1
-                    torch_y_pred_ravel = y_pred_tensor_soft.reshape(y_pred_tensor_soft.shape[0], y_pred_tensor_soft.shape[1], 
+                    torch_y_pred_ravel = y_pred_tensor_soft.reshape(y_pred_tensor_soft.shape[0], y_pred_tensor_soft.shape[1],
                                                                y_pred_tensor_soft.shape[2]*y_pred_tensor_soft.shape[3])
-                    
-                    torch_y_pred_ravel = torch_y_pred_ravel.reshape(torch_y_pred_ravel.shape[0], 
+
+                    torch_y_pred_ravel = torch_y_pred_ravel.reshape(torch_y_pred_ravel.shape[0],
                                                                torch_y_pred_ravel.shape[1]*torch_y_pred_ravel.shape[2])
-                    
+
                     # predefined tensor that sets up for a weighted average
                     torch_set = torch.tensor([[0],[1],[2],[3]]).to(dtype=torch.float32).to(device)
                     trans_set = torch.transpose(torch_set, 0, 1)
@@ -73,23 +76,23 @@ def train_model(model, criterion, dataloaders, optimizer, metrics, bpath, l='cro
 
                     if l != 'cross_entropy':
                         y_pred_tensor = torch_spec
-                        true_masks_tensor= true_masks_tensor.reshape(true_masks_tensor.shape[0], 
+                        true_masks_tensor= true_masks_tensor.reshape(true_masks_tensor.shape[0],
                                                                      true_masks_tensor.shape[1]*true_masks_tensor.shape[2])
-                        true_masks_tensor= true_masks_tensor.reshape(1, true_masks_tensor.shape[0]*true_masks_tensor.shape[1])                        
+                        true_masks_tensor= true_masks_tensor.reshape(1, true_masks_tensor.shape[0]*true_masks_tensor.shape[1])
                     y_pred = pred.data.cpu().numpy()
-                    # y_pred = mask_pred['out'].data.cpu().numpy()[0]
-                    # pred = torch.argmax(y_pred, dim=1)
-                    
+
                     # This is set up perfectly for the use of determining accuracy
                     y_pred = y_pred.ravel()
                     y_true = true_masks.data.cpu().numpy().ravel()
-                    
-                    if l != 'cross_entropy': 
+
+                    if l != 'cross_entropy':
                         loss = criterion(y_pred_tensor, true_masks_tensor)
                     else:
                         loss = criterion(y_pred_tensor, true_masks)
-                            
-                    
+
+                    running_loss += loss.item()
+                    num_batches  += 1
+
                     for name, metric in metrics.items():
                         if name == 'f1_score':
                             batchsummary[f'{phase}_{name}'].append(metric(y_true, y_pred, average='weighted'))
@@ -104,10 +107,12 @@ def train_model(model, criterion, dataloaders, optimizer, metrics, bpath, l='cro
                     if phase == 'Train':
                         loss.backward()
                         optimizer.step()
+
+            # epoch-average loss (not last-batch loss)
             batchsummary['epoch'] = epoch
-            epoch_loss = loss
-            batchsummary[f'{phase}_loss'] = epoch_loss.item()
-            print('{} Loss: {:.4f}'.format(phase, loss))
+            epoch_loss = running_loss / num_batches if num_batches > 0 else 0.0
+            batchsummary[f'{phase}_loss'] = epoch_loss
+            print('{} Loss: {:.4f}'.format(phase, epoch_loss))
         for field in fieldnames[3:]:
             batchsummary[field] = np.mean(batchsummary[field])
         print(batchsummary)
