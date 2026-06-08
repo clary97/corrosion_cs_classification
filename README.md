@@ -38,6 +38,71 @@ The original authors report an F1-score of **86.67%** using weighted cross-entro
 
 ---
 
+## Fork results
+
+### 4-class segmentation (Good / Fair / Poor / Severe)
+
+Trained for 40 epochs on the unified dataset (CCSD + CIR, ~900 train / 56 test images).
+
+| Class | Precision | Recall | F1 | IoU | FPR |
+|---|---|---|---|---|---|
+| Good | 0.938 | 0.959 | 0.949 | 0.902 | 0.204 |
+| Fair | 0.625 | 0.563 | 0.592 | 0.421 | 0.045 |
+| Poor | 0.664 | 0.691 | 0.678 | 0.512 | 0.035 |
+| Severe | 0.832 | 0.561 | 0.670 | 0.504 | 0.003 |
+| **Weighted avg** | **0.874** | **0.877** | **0.874** | **0.799** | **0.164** |
+
+<p align="center">
+    <img src="/figures/4class_training_curves.png" width=800/>
+</p>
+<p align="center">
+    <img src="/figures/4class_evaluation_metrics.png" width=800/>
+</p>
+
+**Prediction samples** (Input | Ground Truth | Prediction | Overlay):
+
+<p align="center">
+    <img src="/figures/4class_pred_sample1.png" width=800/>
+</p>
+<p align="center">
+    <img src="/figures/4class_pred_sample2.png" width=800/>
+</p>
+
+---
+
+### Binary segmentation (Good vs Corrosion)
+
+Fair / Poor / Severe merged into a single **Corrosion** class. Trained for 40 epochs with the same architecture.
+
+| Class | Precision | Recall | F1 | IoU | FPR |
+|---|---|---|---|---|---|
+| Good | 0.957 | 0.949 | 0.953 | 0.910 | 0.139 |
+| Corrosion | 0.840 | 0.861 | 0.850 | 0.740 | 0.051 |
+| **Weighted avg** | **0.929** | **0.928** | **0.929** | **0.870** | **0.118** |
+
+Compared to the 4-class model: F1 **+5.44%p**, IoU **+7.06%p**, FPR **−4.56%p**.
+
+<p align="center">
+    <img src="/figures/binary_training_curves.png" width=800/>
+</p>
+<p align="center">
+    <img src="/figures/binary_evaluation_metrics.png" width=800/>
+</p>
+
+**Prediction samples** (Input | Ground Truth | Prediction | Overlay):
+
+<p align="center">
+    <img src="/figures/binary_pred_sample1.png" width=800/>
+</p>
+<p align="center">
+    <img src="/figures/binary_pred_sample2.png" width=800/>
+</p>
+<p align="center">
+    <img src="/figures/binary_pred_sample3.png" width=800/>
+</p>
+
+---
+
 ## Requirements
 
 **Python 3.9 or 3.10** is recommended for best compatibility with all dependencies.
