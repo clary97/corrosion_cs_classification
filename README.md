@@ -5,7 +5,7 @@
 > The original code, dataset, and trained models belong to the original authors — see the [Citation](#citation) section.  
 > This fork adds dataset unification utilities, a binary classification experiment, and various bug fixes.
 
-Semantic segmentation of corrosion condition states for bridge inspection, using DeepLabV3+ with a ResNet-50 backbone.
+Semantic segmentation of corrosion condition states for bridge inspection, using DeepLabV3+ with a ResNet-101 backbone.
 
 <p align="center">
     <img src="/figures/corrosion_pred_with_descriptions.png" | width=800 />

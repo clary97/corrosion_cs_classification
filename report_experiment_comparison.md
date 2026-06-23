@@ -6,7 +6,7 @@
 
 | 항목 | 실험 A (4-class) | 실험 B (Binary) |
 |---|---|---|
-| 모델 | DeepLabV3+ / ResNet-50 | DeepLabV3+ / ResNet-50 |
+| 모델 | DeepLabV3+ / ResNet-101 | DeepLabV3+ / ResNet-101 |
 | 클래스 수 | 4 (Good / Fair / Poor / Severe) | 2 (Good / Corrosion) |
 | 에포크 | 40 | 40 |
 | 배치 크기 | 2 | 2 |
@@ -117,7 +117,7 @@ Binary 분류 실험을 통해 Weighted 기준 F1 **+5.44%p**, IoU **+7.06%p**, 
 | 항목 | 내용 |
 |---|---|
 | Framework | PyTorch 2.x, CUDA 13.2 |
-| Backbone | ResNet-50 (ImageNet pretrained) |
+| Backbone | ResNet-101 (ImageNet pretrained) |
 | Decoder | DeepLabV3+ |
 | Optimizer | Adam |
 | 데이터 증강 | HorizontalFlip, Affine (rotate ±0.1 rad, translate ±2.5%, shear ±2.5%, scale 97.5–102.5%) |
